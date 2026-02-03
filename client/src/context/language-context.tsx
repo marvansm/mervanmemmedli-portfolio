@@ -57,6 +57,8 @@ interface Translations {
       message: string;
       messagePlaceholder: string;
       send: string;
+      success: string;
+      error: string;
     };
   };
   footer: {
@@ -124,6 +126,8 @@ const translations: Record<Language, Translations> = {
         message: "Message",
         messagePlaceholder: "Tell me about your project...",
         send: "Send Message",
+        success: "Message sent successfully!",
+        error: "Failed to send message. Please try again.",
       },
     },
     footer: {
@@ -189,6 +193,8 @@ const translations: Record<Language, Translations> = {
         message: "Mesaj",
         messagePlaceholder: "Layihəniz haqqında məlumat verin...",
         send: "Göndər",
+        success: "Mesaj uğurla göndərildi!",
+        error: "Mesaj göndərilmədi. Yenidən cəhd edin.",
       },
     },
     footer: {

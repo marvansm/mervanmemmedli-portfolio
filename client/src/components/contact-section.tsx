@@ -1,6 +1,9 @@
 "use client";
 
-import { Mail, MapPin, Send } from "lucide-react";
+import { useRef, useState } from "react";
+import { Mail, MapPin, Send, Loader2 } from "lucide-react";
+import emailjs from "@emailjs/browser";
+import { toast } from "sonner";
 import { useLanguage } from "@/context/language-context";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { AnimatedText } from "./animated-text";
@@ -8,9 +11,48 @@ import { MagneticButton } from "./magnetic-button";
 
 export function ContactSection() {
   const { t } = useLanguage();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [isSending, setIsSending] = useState(false);
+
   const { ref: sectionRef, isVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.1,
   });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formRef.current) return;
+
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+    if (
+      !serviceId ||
+      !templateId ||
+      !publicKey ||
+      serviceId === "service_3c5twjp"
+    ) {
+      toast.error(
+        "EmailJS information is missing. Please set it up in .env.local",
+      );
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      await emailjs.sendForm(serviceId, templateId, formRef.current, publicKey);
+      toast.success(t.contact.form.success || "Message sent successfully!");
+      formRef.current.reset();
+    } catch (error) {
+      console.error("EmailJS Error:", error);
+      toast.error(
+        t.contact.form.error || "Failed to send message. Please try again.",
+      );
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <section
@@ -99,6 +141,8 @@ export function ContactSection() {
 
           {/* Contact Form */}
           <form
+            ref={formRef}
+            onSubmit={handleSubmit}
             className="space-y-6"
             style={{
               opacity: isVisible ? 1 : 0,
@@ -109,30 +153,32 @@ export function ContactSection() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label
-                  htmlFor="name"
+                  htmlFor="from_name"
                   className="font-sans text-sm font-medium text-foreground block mb-2"
                 >
                   {t.contact.form.name}
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
+                  id="from_name"
+                  name="from_name"
+                  required
                   className="font-sans w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
                   placeholder={t.contact.form.namePlaceholder}
                 />
               </div>
               <div>
                 <label
-                  htmlFor="email"
+                  htmlFor="user_email"
                   className="font-sans text-sm font-medium text-foreground block mb-2"
                 >
                   {t.contact.form.email}
                 </label>
                 <input
                   type="email"
-                  id="email"
-                  name="email"
+                  id="user_email"
+                  name="user_email"
+                  required
                   className="font-sans w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
                   placeholder={t.contact.form.emailPlaceholder}
                 />
@@ -150,6 +196,7 @@ export function ContactSection() {
                 id="message"
                 name="message"
                 rows={5}
+                required
                 className="font-sans w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all resize-none"
                 placeholder={t.contact.form.messagePlaceholder}
               />
@@ -158,10 +205,20 @@ export function ContactSection() {
             <MagneticButton strength={0.15}>
               <button
                 type="submit"
-                className="font-sans inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg text-sm font-semibold tracking-wider uppercase transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/25"
+                disabled={isSending}
+                className="font-sans inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg text-sm font-semibold tracking-wider uppercase transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t.contact.form.send}
-                <Send className="w-4 h-4" />
+                {isSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    {t.contact.form.send}
+                    <Send className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </MagneticButton>
           </form>
