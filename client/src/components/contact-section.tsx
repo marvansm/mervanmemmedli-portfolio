@@ -27,12 +27,7 @@ export function ContactSection() {
     const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
     const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
-    if (
-      !serviceId ||
-      !templateId ||
-      !publicKey ||
-      serviceId === "service_3c5twjp"
-    ) {
+    if (!serviceId || !templateId || !publicKey) {
       toast.error(
         "EmailJS information is missing. Please set it up in .env.local",
       );
